@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eika Pensjonscup – Live Ranking</title>
+<style>
+:root{--navy:#061b2f;--navy2:#0b2943;--green:#7ac943;--mint:#dff5e7;--white:#fff;--muted:#a8bac9;}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,var(--navy),#0a3552);color:var(--white);font-family:Inter,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:1450px;margin:0 auto;padding:34px 44px 44px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;margin-bottom:30px}
+.brand{font-weight:900;font-size:46px;letter-spacing:-2px}
+.kicker{color:var(--green);font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+h1{font-size:48px;margin:0 0 8px;letter-spacing:-1.5px}
+.sub{color:var(--muted);font-size:18px}
+.live{border:1px solid rgba(122,201,67,.5);background:rgba(122,201,67,.12);padding:12px 16px;border-radius:999px;font-weight:800;white-space:nowrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:8px;box-shadow:0 0 12px var(--green)}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px}
+.card{background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:24px;backdrop-filter:blur(8px)}
+.card h2{margin:0 0 18px;font-size:23px}
+.row{display:grid;grid-template-columns:70px 1fr 130px 210px;align-items:center;gap:14px;padding:15px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.row:last-child{border-bottom:0}
+.rank{font-size:25px;font-weight:900}
+.name{font-size:19px;font-weight:800}
+.bank{color:var(--muted);font-size:14px;margin-top:3px}
+.score{font-size:23px;font-weight:900;text-align:right}
+.time{color:var(--muted);text-align:right;font-size:14px}
+.podium{background:rgba(122,201,67,.11);border-radius:15px}
+.bankrow{display:grid;grid-template-columns:50px 1fr 110px;align-items:center;gap:12px;padding:14px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.avg{font-size:21px;font-weight:900;text-align:right}
+.footer{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:18px}
+.empty{color:var(--muted);padding:30px 10px;text-align:center}
+@media(max-width:900px){.wrap{padding:24px}.grid{grid-template-columns:1fr}.row{grid-template-columns:48px 1fr 80px}.time{display:none}h1{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="brand">eika</div>
+      <div class="kicker">BM-SAMLING · EIKA ALLIANSEN</div>
+      <h1>PENSJONSCUP · LIVE RANKING</h1>
+      <div class="sub">Hvem topper cupen akkurat nå?</div>
+    </div>
+    <div class="live"><span class="dot"></span>LIVE · oppdateres automatisk</div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>🏆 Beste enkeltpersoner</h2>
+      <div id="individual"></div>
+    </section>
+    <section class="card">
+      <h2>🏦 Beste bank</h2>
+      <div id="banks"></div>
+      <div class="footer"><span>Bankscore = gjennomsnittlig poeng</span><span id="count"></span></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://negzmjccnayjfufeuvty.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yXtRcdAAwGMeohOJc4J96w_RXKkpQa2";
+const API = SUPABASE_URL + "/rest/v1/quiz_results";
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+function medal(i) { return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1); }
+function timeText(ms) {
+  if (!ms && ms !== 0) return "";
+  const s = Math.max(0, ms) / 1000;
+  return s.toFixed(1).replace(".", ",") + " sek";
+}
+async function load() {
+  try {
+    const r = await fetch(API + "?select=name,bank,score,completion_time_ms,created_at&order=score.desc,completion_time_ms.asc,created_at.asc&limit=100", {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY }
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+
+    const ind = document.getElementById("individual");
+    if (!data.length) {
+      ind.innerHTML = '<div class="empty">Ingen deltakere ennå – vær den første!</div>';
+    } else {
+      ind.innerHTML = data.slice(0,10).map((x,i) => `
+        <div class="row ${i<3 ? "podium" : ""}">
+          <div class="rank">${medal(i)}</div>
+          <div><div class="name">${esc(x.name)}</div><div class="bank">${esc(x.bank)}</div></div>
+          <div class="score">${x.score}/5</div>
+          <div class="time">${timeText(x.completion_time_ms)}</div>
+        </div>`).join("");
+    }
+
+    const groups = {};
+    for (const x of data) {
+      if (!groups[x.bank]) groups[x.bank] = [];
+      groups[x.bank].push(Number(x.score) || 0);
+    }
+    const banks = Object.entries(groups)
+      .map(([bank,scores]) => ({bank, avg:scores.reduce((a,b)=>a+b,0)/scores.length, n:scores.length}))
+      .filter(x => x.n >= 1)
+      .sort((a,b) => b.avg-a.avg || b.n-a.n);
+
+    document.getElementById("banks").innerHTML = banks.slice(0,10).map((x,i) => `
+      <div class="bankrow">
+        <div class="rank">${medal(i)}</div>
+        <div><div class="name">${esc(x.bank)}</div><div class="bank">${x.n} deltaker${x.n===1?"":"e"}</div></div>
+        <div class="avg">${x.avg.toFixed(1).replace(".",",")}/5</div>
+      </div>`).join("") || '<div class="empty">Ingen bankresultater ennå.</div>';
+
+    document.getElementById("count").textContent = data.length + " deltakere";
+  } catch (e) {
+    document.getElementById("individual").innerHTML = '<div class="empty">Kunne ikke hente resultater akkurat nå.</div>';
+    console.error(e);
+  }
+}
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>
