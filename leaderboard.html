@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eika Pensjonscup – Live Ranking</title>
+<style>
+:root{--navy:#061b2f;--navy2:#0b2943;--green:#7ac943;--mint:#dff5e7;--white:#fff;--muted:#a8bac9;}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,var(--navy),#0a3552);color:var(--white);font-family:Inter,Arial,sans-serif;min-height:100vh}
+.wrap{max-width:1450px;margin:0 auto;padding:34px 44px 44px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;margin-bottom:30px}
+.brand{font-weight:900;font-size:46px;letter-spacing:-2px}
+.kicker{color:var(--green);font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+h1{font-size:48px;margin:0 0 8px;letter-spacing:-1.5px}
+.sub{color:var(--muted);font-size:18px}
+.live{border:1px solid rgba(122,201,67,.5);background:rgba(122,201,67,.12);padding:12px 16px;border-radius:999px;font-weight:800;white-space:nowrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:8px;box-shadow:0 0 12px var(--green)}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px}
+.card{background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:24px;backdrop-filter:blur(8px)}
+.card h2{margin:0 0 18px;font-size:23px}
+.row{display:grid;grid-template-columns:70px 1fr 130px 210px;align-items:center;gap:14px;padding:15px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.row:last-child{border-bottom:0}
+.rank{font-size:25px;font-weight:900}
+.name{font-size:19px;font-weight:800}
+.bank{color:var(--muted);font-size:14px;margin-top:3px}
+.score{font-size:23px;font-weight:900;text-align:right}
+.time{color:var(--muted);text-align:right;font-size:14px}
+.podium{background:rgba(122,201,67,.11);border-radius:15px}
+.bankrow{display:grid;grid-template-columns:50px 1fr 110px;align-items:center;gap:12px;padding:14px 10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.avg{font-size:21px;font-weight:900;text-align:right}
+.footer{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:18px}
+.empty{color:var(--muted);padding:30px 10px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(3,18,30,.78);display:none;align-items:center;justify-content:center;z-index:20}
+.overlay.show{display:flex;animation:fadeIn .25s ease}
+.win{position:relative;background:white;color:#061b2f;border-radius:28px;padding:48px 58px;text-align:center;max-width:760px;width:calc(100% - 48px);box-shadow:0 30px 100px rgba(0,0,0,.35);animation:pop .55s cubic-bezier(.2,1.4,.4,1)}
+.win h2{font-size:48px;line-height:1.05;margin:0 0 14px}
+.win p{font-size:28px;font-weight:800;margin:0}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti i{position:absolute;top:-20px;width:10px;height:18px;animation:fall 1.7s linear forwards}
+@keyframes pop{0%{transform:scale(.65);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fall{to{transform:translate3d(var(--x),110vh,0) rotate(720deg);opacity:0}}
+@media(max-width:900px){.wrap{padding:24px}.grid{grid-template-columns:1fr}.row{grid-template-columns:48px 1fr 80px}.time{display:none}h1{font-size:38px}}
+</style>
+
+<style>
+#leaderOverlay .leader-card {
+  animation: leaderPop .55s cubic-bezier(.2,.9,.2,1.2);
+}
+@keyframes leaderPop {
+  0% { transform: scale(.55) rotate(-2deg); opacity: 0; }
+  70% { transform: scale(1.06) rotate(.5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+#leaderOverlay .leader-title {
+  font-size: clamp(34px, 5vw, 72px);
+  line-height: 1.02;
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="brand">eika</div>
+      <div class="kicker">BM-SAMLING · EIKA KAPITALFORVALTNING I SAMARBEID MED STOREBRAND</div>
+      <h1>PENSJONSCUP · LIVE RANKING</h1>
+      <div class="sub">Hvem topper cupen akkurat nå?</div>
+    </div>
+    <div class="live"><span class="dot"></span>LIVE · oppdateres automatisk</div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>🏆 Best på pensjon</h2>
+      <div id="individual"></div>
+    </section>
+    <section class="card">
+      <h2>🏦 Beste bank</h2>
+      <div id="banks"></div>
+      <div class="footer"><span>Bankscore = gjennomsnittlig poeng</span><span id="count"></span></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://negzmjccnayjfufeuvty.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yXtRcdAAwGMeohOJc4J96w_RXKkpQa2";
+const API = SUPABASE_URL + "/rest/v1/quiz_results";
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+function medal(i) { return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1); }
+function timeText(ms) {
+  if (!ms && ms !== 0) return "";
+  const s = Math.max(0, ms) / 1000;
+  return s.toFixed(1).replace(".", ",") + " sek";
+}
+let previousLeader = null;
+let firstLoad = true;
+function showLeader(name){
+  document.getElementById('leaderMessage').textContent = `Gratulerer – ${name} leder nå Pensjonscupen!`;
+  const c=document.getElementById('confetti'); c.innerHTML='';
+  for(let i=0;i<70;i++){ const el=document.createElement('i'); el.style.left=(Math.random()*100)+'%'; el.style.background=['#7ac943','#0b2943','#f5b700','#ffffff'][i%4]; el.style.setProperty('--x',((Math.random()-0.5)*420)+'px'); el.style.animationDelay=(Math.random()*0.55)+'s'; c.appendChild(el); }
+  const ov=document.getElementById('leaderOverlay'); ov.classList.add('show'); setTimeout(()=>ov.classList.remove('show'),5000);
+}
+async function load() {
+  try {
+    const r = await fetch(API + "?select=name,bank,score,completion_time_ms,created_at&order=score.desc,completion_time_ms.asc,created_at.asc&limit=100", {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY }
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    const leader = data[0] ? `${data[0].name} · ${data[0].bank}` : null;
+    if (!firstLoad && leader && leader !== previousLeader) showLeader(data[0].name);
+    previousLeader = leader; firstLoad = false;
+
+    const ind = document.getElementById("individual");
+    if (!data.length) {
+      ind.innerHTML = '<div class="empty">Ingen deltakere ennå – vær den første!</div>';
+    } else {
+      ind.innerHTML = data.slice(0,10).map((x,i) => `
+        <div class="row ${i<3 ? "podium" : ""}">
+          <div class="rank">${medal(i)}</div>
+          <div><div class="name">${esc(x.name)}</div><div class="bank">${esc(x.bank)}</div></div>
+          <div class="score">${x.score}/5</div>
+          <div class="time">${timeText(x.completion_time_ms)}</div>
+        </div>`).join("");
+    }
+
+    const groups = {};
+    for (const x of data) {
+      if (!groups[x.bank]) groups[x.bank] = [];
+      groups[x.bank].push(Number(x.score) || 0);
+    }
+    const banks = Object.entries(groups)
+      .map(([bank,scores]) => ({bank, avg:scores.reduce((a,b)=>a+b,0)/scores.length, n:scores.length}))
+      .filter(x => x.n >= 1)
+      .sort((a,b) => b.avg-a.avg || b.n-a.n);
+
+    document.getElementById("banks").innerHTML = banks.slice(0,10).map((x,i) => `
+      <div class="bankrow">
+        <div class="rank">${medal(i)}</div>
+        <div><div class="name">${esc(x.bank)}</div><div class="bank">${x.n} deltaker${x.n===1?"":"e"}</div></div>
+        <div class="avg">${x.avg.toFixed(1).replace(".",",")}/5</div>
+      </div>`).join("") || '<div class="empty">Ingen bankresultater ennå.</div>';
+
+    document.getElementById("count").textContent = data.length + " deltakere";
+  } catch (e) {
+    document.getElementById("individual").innerHTML = '<div class="empty">Kunne ikke hente resultater akkurat nå.</div>';
+    console.error(e);
+  }
+}
+load();
+setInterval(load, 5000);
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadLeaderboard();
+});
+window.addEventListener('focus', loadLeaderboard);
+
+</script>
+<button id="fullscreenBtn" type="button" title="Vis leaderboard i fullskjerm">⛶ Fullskjerm</button>
+<script>
+(() => {
+  const btn = document.getElementById('fullscreenBtn');
+  if (!btn) return;
+
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.warn('Fullskjerm kunne ikke aktiveres:', err);
+    }
+  }
+
+  btn.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('fullscreenchange', () => {
+    btn.textContent = document.fullscreenElement ? '⛶ Fullskjerm' : '⛶ Fullskjerm';
+  });
+})();
+</script>
+
+</body>
+</html>
