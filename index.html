@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eika Pensjonscup</title>
+<style>
+:root{--blue:#003b5c;--green:#62b946;--light:#f4f7f8;--ink:#18323f;--white:#fff;--muted:#60747e}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#f5f8f9 0%,#eef4f5 100%);color:var(--ink);min-height:100vh}
+header{background:var(--blue);color:white;padding:18px 34px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 18px #003b5c25}
+.logo{font-size:30px;font-weight:900;letter-spacing:-1px}.tag{font-size:13px;font-weight:700;letter-spacing:1.2px;opacity:.9}
+.wrap{max-width:920px;margin:42px auto;padding:0 20px}.card{background:white;border-radius:22px;padding:40px;box-shadow:0 12px 40px #003b5c18;border:1px solid #e5edef}
+h1{margin:0 0 12px;font-size:42px;line-height:1.05;color:var(--blue);letter-spacing:-1px}h2{font-size:27px;color:var(--blue);line-height:1.25}p{line-height:1.55}
+input,select{width:100%;padding:15px 16px;border:1px solid #c9d5da;border-radius:11px;font-size:17px;margin:7px 0 18px;background:#fff;color:#000}
+button{border:0;border-radius:11px;padding:15px 24px;background:var(--green);color:white;font-weight:800;font-size:16px;cursor:pointer;transition:transform .15s,box-shadow .15s}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 15px #62b94645}
+button.secondary{background:var(--blue)}button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-weight:800;margin-bottom:20px}.timer{color:var(--blue);background:#eef4f6;padding:7px 11px;border-radius:999px}
+.answers{display:grid;gap:13px;margin:25px 0}.answer{padding:18px;border:2px solid #dce5e8;border-radius:13px;background:white;color:#000;text-align:left;font-size:17px;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}.answer:hover{border-color:#9fb5be;transform:translateY(-1px)}.answer.selected{border-color:var(--green);background:#eef8ea}
+.result{text-align:center}.score{font-size:72px;font-weight:900;color:var(--blue);margin:18px}.rank{font-size:20px;margin:9px}
+table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:13px;border-bottom:1px solid #e3eaed;text-align:left}th{color:var(--blue)}
+.pill{display:inline-block;padding:7px 11px;border-radius:999px;background:#eef8ea;color:#397d27;font-weight:800}
+.small{font-size:13px;color:var(--muted)}
+.hidden{display:none}
+.hero-kicker{display:inline-block;margin-bottom:14px;padding:7px 11px;border-radius:999px;background:#eef8ea;color:#397d27;font-size:13px;font-weight:900;letter-spacing:.7px}
+.progress{height:7px;background:#e5edef;border-radius:99px;overflow:hidden;margin:0 0 25px}.progress>div{height:100%;background:var(--green);transition:width .25s}
+.cta-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+</style>
+</head>
+<body>
+<header><div class="logo">eika</div><div class="tag">PENSJONSCUP</div></header>
+<div class="wrap">
+<section id="start" class="card">
+<span class="hero-kicker">BM-SAMLING · EIKA KAPITALFORVALTNING I SAMARBEID MED STOREBRAND</span><h1>🏆 Eika Pensjonscup</h1>
+<p><strong>5 spørsmål. 60 sekunder.</strong><br>Test pensjonskunnskapen din og se om du kan bli dagens pensjonsmester.</p>
+<label>Navn</label><input id="name" placeholder="F.eks. Kari Hansen">
+<label>Sparebank</label>
+<select id="bank"><option value="">Velg bank…</option><option>Agder Sparebank</option><option>Aurskog Sparebank</option><option>Berg Sparebank</option><option>Bien Sparebank</option><option>Bjugn Sparebank</option><option>Etnedal Sparebank</option><option>Evje & Hornnes Sparebank</option><option>Gildeskål Sparebank</option><option>Grong Sparebank</option><option>Grue Sparebank</option><option>Haltdalen Sparebank</option><option>Haugesund Sparebank</option><option>Hegra Sparebank</option><option>Høland Setskog Sparebank</option><option>JBF</option><option>Jæren Sparebank</option><option>Kvinesdal Sparebank</option><option>Marker & Eidsberg Sparebank</option><option>Melhusbanken</option><option>Odal Sparebank</option><option>Oppdalsbanken</option><option>Orkla Sparebank</option><option>Penni</option><option>Rogaland Sparebank</option><option>Romerike Sparebank</option><option>Rørosbanken</option><option>Skagerrak Sparebank</option><option>Skudenes & Aakra Sparebank</option><option>Skue Sparebank</option><option>Sogn Sparebank</option><option>Soknedal Sparebank</option><option>Sparebanken Narvik</option><option>Strømmen Sparebank</option><option>Tinde Sparebank</option><option>Trøgstad Sparebank</option><option>Trøndelag Sparebank</option><option>Valdres Sparebank</option><option>Valle Sparebank</option><option>Vekselbanken</option><option>Ørskog Sparebank</option><option>Øvrige</option></select>
+<button id="startButton" onclick="startQuiz()">Start quizen →</button>
+<p class="small">Én gjennomføring per deltaker. Resultatet registreres på navn og bank.</p>
+</section>
+
+<section id="quiz" class="card hidden">
+<div class="progress"><div id="progressbar" style="width:20%"></div></div><div class="qmeta"><span id="qnum"></span><span class="timer">⏱ <span id="time">60</span> sek</span></div>
+<h2 id="question"></h2><div id="answers" class="answers"></div>
+<button id="next" disabled onclick="nextQuestion()">Neste →</button>
+</section>
+
+<section id="result" class="card result hidden">
+<span class="hero-kicker">RESULTAT</span><h1>🎉 Godt jobbet!</h1><div class="score" id="score"></div>
+<div class="rank" id="personRank"></div><div class="rank" id="bankRank"></div>
+<p>Vil du se leaderboardet?</p>
+<button class="secondary" onclick="showBoard()">Se leaderboard →</button>
+</section>
+
+<section id="board" class="card hidden">
+<span class="hero-kicker">LIVE RANKING</span><h1>🏆 Leaderboard</h1>
+<p class="pill" id="boardStatus">LIVE – resultatene hentes fra felles leaderboard</p>
+<h2>Best på pensjon</h2><table><thead><tr><th>#</th><th>Navn</th><th>Bank</th><th>Score</th><th>Tid</th></tr></thead><tbody id="people"></tbody></table>
+<h2>Beste banker</h2><table><thead><tr><th>#</th><th>Bank</th><th>Deltakere</th><th>Snitt</th></tr></thead><tbody id="banks"></tbody></table>
+<br><button onclick="location.reload()">Til start</button>
+</section>
+</div>
+<script>
+const SUPABASE_URL = "https://negzmjccnayjfufeuvty.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yXtRcdAAwGMeohOJc4J96w_RXKkpQa2";
+const RESULTS_URL = `${SUPABASE_URL}/rest/v1/quiz_results`;
+
+const questions=[
+ {q:"Hva er minimumskravet til arbeidsgivers innskudd etter OTP-reglene?",a:["1 %","2 %","3 %","5 %"],c:1},
+ {q:"Hva er den mest direkte effekten av å øke innskuddssatsen fra 2 % til 5 %?",a:["De ansatte får høyere pensjonssparing","Bedriften får automatisk lavere arbeidsgiveravgift","De ansatte får garantert høyere avkastning","Bedriften slipper skatt på pensjonskostnaden"],c:0},
+ {q:"Hva er gjennomsnittlig sparesats for innskuddspensjon i Norge?",a:["2 %","3 %","4 %","5 %"],c:2},
+ {q:"En ansatt tjener 700 000 kr. Omtrent hvor mye mer settes av til pensjon per år hvis innskuddssatsen økes fra 2 % til 3 %?",a:["700 kr","1 400 kr","7 000 kr","14 000 kr"],c:2},
+ {q:"Hva er en vanlig utfordring for ansatte når det gjelder tjenestepensjon?",a:["De får for mange pensjonsutbetalinger","De vet ikke hvilken bank arbeidsgiver bruker","De forstår ikke alltid hva de har og hva ordningen betyr for dem","De kan ikke endre arbeidsgivers innskuddssats selv"],c:2}
+];
+let i=0, chosen=null, correct=0, started=0, timer, seconds=60, current=null, submitted=false;
+
+async function startQuiz(){
+ const n=document.getElementById('name').value.trim(), b=document.getElementById('bank').value;
+ if(!n||!b){alert("Fyll inn navn og velg bank.");return}
+ const participantKey=`eika_pensjonscup_done_v2_${n.toLocaleLowerCase('nb-NO').replace(/\s+/g,' ').trim()}__${b}`;
+ if(localStorage.getItem(participantKey)==='1'){
+   alert("Du har allerede gjennomført Eika Pensjonscup. Det er kun mulig å delta én gang.");
+   return;
+ }
+ document.getElementById('startButton').disabled=true;
+ try{
+   const arr=await fetchResults();
+   const norm=x=>String(x||'').toLocaleLowerCase('nb-NO').replace(/\s+/g,' ').trim();
+   if(arr.some(x=>norm(x.name)===norm(n) && norm(x.bank)===norm(b))){
+     localStorage.setItem(participantKey,'1');
+     alert("Du har allerede gjennomført Eika Pensjonscup. Det er kun mulig å delta én gang.");
+     document.getElementById('startButton').disabled=false;
+     return;
+   }
+ }catch(e){
+   console.error(e);
+   alert("Kunne ikke kontrollere om du allerede har deltatt. Sjekk nettverket og prøv igjen.");
+   document.getElementById('startButton').disabled=false;
+   return;
+ }
+ document.getElementById('startButton').disabled=false;
+ current={name:n,bank:b,participantKey}; submitted=false; started=Date.now(); correct=0;i=0;seconds=60;
+ document.getElementById('start').classList.add('hidden');document.getElementById('quiz').classList.remove('hidden');
+ timer=setInterval(()=>{seconds--;document.getElementById('time').textContent=seconds;if(seconds<=0){clearInterval(timer);finish();}},1000);
+ renderQ();
+}
+function renderQ(){
+ document.getElementById("progressbar").style.width=((i+1)/questions.length*100)+"%";
+ chosen=null;document.getElementById('next').disabled=true;
+ document.getElementById('qnum').textContent=`Spørsmål ${i+1} av ${questions.length}`;
+ document.getElementById('question').textContent=questions[i].q;
+ const box=document.getElementById('answers');box.innerHTML='';
+ questions[i].a.forEach((x,j)=>{let d=document.createElement('button');d.className='answer';d.textContent=x;d.onclick=()=>{chosen=j;document.querySelectorAll('.answer').forEach(a=>a.classList.remove('selected'));d.classList.add('selected');document.getElementById('next').disabled=false};box.appendChild(d)});
+}
+function nextQuestion(){if(chosen===questions[i].c)correct++;i++;if(i<questions.length)renderQ();else finish()}
+
+async function submitResult(result){
+ const response=await fetch(RESULTS_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(result)});
+ if(!response.ok){const msg=await response.text();throw new Error(msg||`HTTP ${response.status}`);}
+}
+async function fetchResults(){
+ const response=await fetch(`${RESULTS_URL}?select=name,bank,score,completion_time_ms,created_at&order=score.desc,completion_time_ms.asc,created_at.asc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+ if(!response.ok){const msg=await response.text();throw new Error(msg||`HTTP ${response.status}`);}
+ return await response.json();
+}
+
+async function finish(){
+ if(submitted) return;
+ submitted=true;clearInterval(timer);
+ const elapsed=Math.min(Math.round((Date.now()-started)/1000),60);
+ const result={...current,score:correct,completion_time_ms:elapsed*1000};
+ document.getElementById('quiz').classList.add('hidden');document.getElementById('result').classList.remove('hidden');
+ document.getElementById('score').textContent=`${correct}/5`;
+ document.getElementById('personRank').textContent='Resultatet registreres…';
+ document.getElementById('bankRank').textContent='';
+ try{
+   await submitResult(result);
+   localStorage.setItem(current.participantKey,'1');
+   const arr=await fetchResults();
+   const pos=arr.findIndex(x=>x.name===current.name && x.bank===current.bank && x.score===correct && Number(x.completion_time_ms)===elapsed*1000)+1;
+   document.getElementById('personRank').textContent=`Foreløpig plassering: #${pos}`;
+   const groups={};arr.forEach(x=>(groups[x.bank]??=[]).push(Number(x.score)));
+   const bs=Object.entries(groups).map(([bank,v])=>({bank,n:v.length,avg:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>b.avg-a.avg);
+   const my=bs.findIndex(x=>x.bank===current.bank)+1;
+   document.getElementById('bankRank').textContent=`${current.bank} er foreløpig #${my} blant bankene`;
+ }catch(e){
+   console.error(e);
+   document.getElementById('personRank').textContent='Resultatet kunne ikke lagres akkurat nå.';
+   document.getElementById('bankRank').textContent='Prøv gjerne på nytt.';
+ }
+}
+
+async function showBoard(){
+ document.getElementById('result').classList.add('hidden');document.getElementById('board').classList.remove('hidden');
+ const status=document.getElementById('boardStatus');status.textContent='Laster live resultater…';
+ try{
+   const arr=await fetchResults();
+   let p=arr.slice(0,10);
+   document.getElementById('people').innerHTML=p.map((x,j)=>`<tr><td>${j+1}</td><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.bank)}</td><td><strong>${x.score}/5</strong></td><td>${Math.round(Number(x.completion_time_ms)/1000)}s</td></tr>`).join('') || '<tr><td colspan="5">Ingen resultater ennå.</td></tr>';
+   let g={};arr.forEach(x=>(g[x.bank]??=[]).push(Number(x.score)));
+   let b=Object.entries(g).map(([bank,v])=>({bank,n:v.length,avg:v.reduce((a,c)=>a+c,0)/v.length})).sort((a,b)=>b.avg-a.avg);
+   document.getElementById('banks').innerHTML=b.map((x,j)=>`<tr><td>${j+1}</td><td>${escapeHtml(x.bank)}</td><td>${x.n}</td><td><strong>${x.avg.toFixed(2)}</strong></td></tr>`).join('') || '<tr><td colspan="4">Ingen banker ennå.</td></tr>';
+   status.textContent=`LIVE – ${arr.length} registrerte deltakere`;
+ }catch(e){
+   console.error(e);status.textContent='Kunne ikke hente live-resultater akkurat nå.';
+ }
+}
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+</script>
+</body></html>
